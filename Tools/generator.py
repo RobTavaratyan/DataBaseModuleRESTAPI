@@ -98,9 +98,9 @@ def add_changes(num_changes, num_cars, num_details):
             print(f"Failed to add change: {response.status_code}")
 
 
-NUM_CARS = 100
-NUM_DETAILS = 50
-NUM_CHANGES = 100
+NUM_CARS = 10000
+NUM_DETAILS = 5000
+NUM_CHANGES = 10000
 add_cars(NUM_CARS)
 add_details(NUM_DETAILS)
 add_changes(NUM_CHANGES, NUM_CARS, NUM_DETAILS)

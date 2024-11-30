@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import date
 
-from models import Car, Detail, Change, SessionLocal, engine
+from init_models import Car, Detail, Change, SessionLocal, engine
 
 app = FastAPI()
 
