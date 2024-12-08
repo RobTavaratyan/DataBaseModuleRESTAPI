@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Initializing the database..."
-python3 init_models.py
+python3 ./FastAPI/init_models.py
 
 echo "Starting FastAPI server..."
 uvicorn ./FastAPI/CRUD:app --reload &
@@ -13,6 +13,6 @@ echo "Running data generator..."
 python3 ./Tools/generator.py
 
 echo "Running API requests..."
-python3 ./Tools/requests.py
+python3 ./Tools/api_requests.py
 
 wait

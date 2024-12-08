@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
 from FastAPI.CRUD import get_db
-from init_models import Car, Detail, Change
+from FastAPI.init_models import Car, Detail, Change
 
 app = FastAPI()
 
