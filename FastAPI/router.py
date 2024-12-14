@@ -1,12 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from datetime import date
+from alchemy.init_models import Car, Detail, Change, SessionLocal
 
-from FastAPI.init_models import Car, Detail, Change, SessionLocal
-
-app = FastAPI()
+app = APIRouter()
 
 
+# Dependency to get the database session
 def get_db():
     db = SessionLocal()
     try:
@@ -15,11 +16,37 @@ def get_db():
         db.close()
 
 
+# Pydantic models for request bodies
+class CarCreate(BaseModel):
+    owner: str
+    brand: str
+    appearance: str
+    power: int
+    max_speed: int
+    created_at: date
+
+
+class DetailCreate(BaseModel):
+    name: str
+    car_part: str
+    firm: str
+    price: float
+    guarantee: date
+
+
+class ChangeCreate(BaseModel):
+    car_id: int
+    mechanic_name: str
+    issue_date: date
+    appearance_change: int
+    max_speed_change: int
+    power_change: int
+
+
+# CRUD operations for Cars
 @app.post("/cars/")
-def create_car(owner: str, brand: str, appearance: str, power: int, max_speed: int, created_at: date,
-               db: Session = Depends(get_db)):
-    db_car = Car(owner=owner, brand=brand, appearance=appearance, power=power, max_speed=max_speed,
-                 created_at=created_at)
+def create_car(car: CarCreate, db: Session = Depends(get_db)):
+    db_car = Car(**car.dict())
     db.add(db_car)
     db.commit()
     db.refresh(db_car)
@@ -40,17 +67,13 @@ def read_car(car_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/cars/{car_id}")
-def update_car(car_id: int, owner: str, brand: str, appearance: str, power: int, max_speed: int,
-               db: Session = Depends(get_db)):
+def update_car(car_id: int, car: CarCreate, db: Session = Depends(get_db)):
     db_car = db.query(Car).filter(Car.id == car_id).first()
     if db_car is None:
         raise HTTPException(status_code=404, detail="Car not found")
 
-    db_car.owner = owner
-    db_car.brand = brand
-    db_car.appearance = appearance
-    db_car.power = power
-    db_car.max_speed = max_speed
+    for key, value in car.dict().items():
+        setattr(db_car, key, value)
 
     db.commit()
     db.refresh(db_car)
@@ -68,9 +91,10 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
     return {"message": "Car deleted"}
 
 
+# CRUD operations for Details
 @app.post("/details/")
-def create_detail(name: str, car_part: str, firm: str, price: float, guarantee: date, db: Session = Depends(get_db)):
-    db_detail = Detail(name=name, car_part=car_part, firm=firm, price=price, guarantee=guarantee)
+def create_detail(detail: DetailCreate, db: Session = Depends(get_db)):
+    db_detail = Detail(**detail.dict())
     db.add(db_detail)
     db.commit()
     db.refresh(db_detail)
@@ -91,17 +115,13 @@ def read_detail(detail_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/details/{detail_id}")
-def update_detail(detail_id: int, name: str, car_part: str, firm: str, price: float, guarantee: date,
-                  db: Session = Depends(get_db)):
+def update_detail(detail_id: int, detail: DetailCreate, db: Session = Depends(get_db)):
     db_detail = db.query(Detail).filter(Detail.id == detail_id).first()
     if db_detail is None:
         raise HTTPException(status_code=404, detail="Detail not found")
 
-    db_detail.name = name
-    db_detail.car_part = car_part
-    db_detail.firm = firm
-    db_detail.price = price
-    db_detail.guarantee = guarantee
+    for key, value in detail.dict().items():
+        setattr(db_detail, key, value)
 
     db.commit()
     db.refresh(db_detail)
@@ -119,17 +139,10 @@ def delete_detail(detail_id: int, db: Session = Depends(get_db)):
     return {"message": "Detail deleted"}
 
 
+# CRUD operations for Changes
 @app.post("/changes/")
-def create_change(car_id: int, mechanic_name: str, issue_date: date, appearance_change: int, max_speed_change: int,
-                  power_change: int, db: Session = Depends(get_db)):
-    db_change = Change(
-        car_id=car_id,
-        mechanic_name=mechanic_name,
-        issue_date=issue_date,
-        appearance_change=appearance_change,
-        max_speed_change=max_speed_change,
-        power_change=power_change
-    )
+def create_change(change: ChangeCreate, db: Session = Depends(get_db)):
+    db_change = Change(**change.dict())
     db.add(db_change)
     db.commit()
     db.refresh(db_change)
@@ -150,17 +163,13 @@ def read_change(change_id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/changes/{change_id}")
-def update_change(change_id: int, mechanic_name: str, issue_date: date, appearance_change: int, max_speed_change: int,
-                  power_change: int, db: Session = Depends(get_db)):
+def update_change(change_id: int, change: ChangeCreate, db: Session = Depends(get_db)):
     db_change = db.query(Change).filter(Change.issue_id == change_id).first()
     if db_change is None:
         raise HTTPException(status_code=404, detail="Change not found")
 
-    db_change.mechanic_name = mechanic_name
-    db_change.issue_date = issue_date
-    db_change.appearance_change = appearance_change
-    db_change.max_speed_change = max_speed_change
-    db_change.power_change = power_change
+    for key, value in change.dict().items():
+        setattr(db_change, key, value)
 
     db.commit()
     db.refresh(db_change)

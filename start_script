@@ -1,18 +1,34 @@
 #!/bin/bash
 
-echo "Initializing the database..."
-python3 ./FastAPI/init_models.py
+POSTGRES_IMAGE="postgres:latest"
+CONTAINER_NAME="rest_api"
+POSTGRES_USER="username"
+POSTGRES_PASSWORD="password"
+POSTGRES_DB="my_database"
+POSTGRES_PORT=5432
 
-echo "Starting FastAPI server..."
-uvicorn ./FastAPI/CRUD:app --reload &
+echo "Starting PostgreSQL container..."
+docker run -d \
+  --name $CONTAINER_NAME \
+  -e POSTGRES_USER=$POSTGRES_USER \
+  -e POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+  -e POSTGRES_DB=$POSTGRES_DB \
+  -p $POSTGRES_PORT:5432 \
+  --rm \
+  $POSTGRES_IMAGE
+sleep 8
 
-echo "Waiting for FastAPI server to start..."
+
+echo "Running init_models.py..."
+$VIRTUAL_ENV/bin/python3 ./alchemy/init_models.py
 sleep 5
 
-echo "Running data generator..."
-python3 ./Tools/generator.py
+echo "Starting FastAPI application..."
+$VIRTUAL_ENV/bin/uvicorn FastAPI.main:fastapi_app --reload &
+sleep 10
 
-echo "Running API requests..."
-python3 ./Tools/api_requests.py
+echo 'Running generator for DB...'
+$VIRTUAL_ENV/bin/python3 ./Tools/generator.py
+sleep 30
 
-wait
+
