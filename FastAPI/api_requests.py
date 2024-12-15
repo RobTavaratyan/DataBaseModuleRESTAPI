@@ -1,15 +1,16 @@
-import requests
-from fastapi import Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, asc
 from datetime import date
 
-from FastAPI.router import get_db
+from fastapi import Depends, HTTPException, APIRouter
+from sqlalchemy import func, desc, asc
+from sqlalchemy.orm import Session
+
+from FastAPI.basic_router import get_db
 from alchemy.init_models import Car, Detail, Change
-from FastAPI.main import fastapi_app as app
+
+api_router = APIRouter()
 
 
-@app.get("/cars/filter")
+@api_router.get("/cars/filter")
 async def filter_cars(
         owner: str,
         brand: str,
@@ -61,7 +62,7 @@ async def filter_cars(
     return {"cars": cars}
 
 
-@app.get("/cars/{car_id}/details")
+@api_router.get("/cars/{car_id}/details")
 async def get_car_details(
         car_id: int,
         order_by: str = "id",
@@ -103,7 +104,7 @@ async def get_car_details(
     return {"details": details}
 
 
-@app.put("/cars/update_power")
+@api_router.put("/cars/update_power")
 async def update_power(brand: str, created_before: str, db: Session = Depends(get_db)):
     """
     UPDATE cars SET power = power * 1.2
@@ -138,7 +139,7 @@ async def update_power(brand: str, created_before: str, db: Session = Depends(ge
     return {"message": f"{updated_count} car(s) power updated successfully."}
 
 
-@app.get("/cars/group_by_brand")
+@api_router.get("/cars/group_by_brand")
 async def group_by_brand(
         order_by: str = "brand", direction: str = "asc", db: Session = Depends(get_db)
 ):
@@ -174,7 +175,7 @@ async def group_by_brand(
     return {"brands": results}
 
 
-@app.get("/cars/sort")
+@api_router.get("/cars/sort")
 async def sort_cars(
         order_by: str = "power", direction: str = "desc", db: Session = Depends(get_db)
 ):
@@ -197,26 +198,3 @@ async def sort_cars(
     )
     cars = cars_query.all()
     return {"cars": cars}
-
-res = requests.get('http://127.0.0.1:8000/cars/filter?owner=John&brand=Toyota&created_after=2020-01-01&order_by=created_at&direction=asc')
-print(res.json())
-
-
-"""
-curl -X 'GET' \
-  'http://127.0.0.1:8000/cars/filter?owner=John&brand=Toyota&created_after=2020-01-01&order_by=created_at&direction=asc'
-
-curl -X 'GET' \
-  'http://127.0.0.1:8000/cars/1/details?order_by=id&direction=desc'
-
-curl -X 'PUT' \
-  'http://127.0.0.1:8000/cars/update_power?brand=BMW&created_before=2020-01-01'
-
-curl -X 'GET' \
-  'http://127.0.0.1:8000/cars/group_by_brand?order_by=car_count&direction=desc'
-
-curl -X 'GET' \
-  'http://127.0.0.1:8000/cars/sort?order_by=power&direction=desc'
-
-
-"""

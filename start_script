@@ -16,12 +16,12 @@ docker run -d \
   -p $POSTGRES_PORT:5432 \
   --rm \
   $POSTGRES_IMAGE
-sleep 8
+sleep 10
 
 
 echo "Running init_models.py..."
 $VIRTUAL_ENV/bin/python3 ./alchemy/init_models.py
-sleep 5
+sleep 10
 
 echo "Starting FastAPI application..."
 $VIRTUAL_ENV/bin/uvicorn FastAPI.main:fastapi_app --reload &

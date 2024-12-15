@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from alchemy.init_models import Car, Detail, Change, SessionLocal
 
-app = APIRouter()
+basic_router = APIRouter()
 
 
 # Dependency to get the database session
@@ -44,7 +46,7 @@ class ChangeCreate(BaseModel):
 
 
 # CRUD operations for Cars
-@app.post("/cars/")
+@basic_router.post("/cars/")
 def create_car(car: CarCreate, db: Session = Depends(get_db)):
     db_car = Car(**car.dict())
     db.add(db_car)
@@ -53,12 +55,12 @@ def create_car(car: CarCreate, db: Session = Depends(get_db)):
     return db_car
 
 
-@app.get("/cars/")
+@basic_router.get("/cars/")
 def read_cars(db: Session = Depends(get_db)):
     return db.query(Car).all()
 
 
-@app.get("/cars/{car_id}")
+@basic_router.get("/cars/{car_id}")
 def read_car(car_id: int, db: Session = Depends(get_db)):
     db_car = db.query(Car).filter(Car.id == car_id).first()
     if db_car is None:
@@ -66,7 +68,7 @@ def read_car(car_id: int, db: Session = Depends(get_db)):
     return db_car
 
 
-@app.put("/cars/{car_id}")
+@basic_router.put("/cars/{car_id}")
 def update_car(car_id: int, car: CarCreate, db: Session = Depends(get_db)):
     db_car = db.query(Car).filter(Car.id == car_id).first()
     if db_car is None:
@@ -80,7 +82,7 @@ def update_car(car_id: int, car: CarCreate, db: Session = Depends(get_db)):
     return db_car
 
 
-@app.delete("/cars/{car_id}")
+@basic_router.delete("/cars/{car_id}")
 def delete_car(car_id: int, db: Session = Depends(get_db)):
     db_car = db.query(Car).filter(Car.id == car_id).first()
     if db_car is None:
@@ -92,7 +94,7 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
 
 
 # CRUD operations for Details
-@app.post("/details/")
+@basic_router.post("/details/")
 def create_detail(detail: DetailCreate, db: Session = Depends(get_db)):
     db_detail = Detail(**detail.dict())
     db.add(db_detail)
@@ -101,12 +103,12 @@ def create_detail(detail: DetailCreate, db: Session = Depends(get_db)):
     return db_detail
 
 
-@app.get("/details/")
+@basic_router.get("/details/")
 def read_details(db: Session = Depends(get_db)):
     return db.query(Detail).all()
 
 
-@app.get("/details/{detail_id}")
+@basic_router.get("/details/{detail_id}")
 def read_detail(detail_id: int, db: Session = Depends(get_db)):
     db_detail = db.query(Detail).filter(Detail.id == detail_id).first()
     if db_detail is None:
@@ -114,7 +116,7 @@ def read_detail(detail_id: int, db: Session = Depends(get_db)):
     return db_detail
 
 
-@app.put("/details/{detail_id}")
+@basic_router.put("/details/{detail_id}")
 def update_detail(detail_id: int, detail: DetailCreate, db: Session = Depends(get_db)):
     db_detail = db.query(Detail).filter(Detail.id == detail_id).first()
     if db_detail is None:
@@ -128,7 +130,7 @@ def update_detail(detail_id: int, detail: DetailCreate, db: Session = Depends(ge
     return db_detail
 
 
-@app.delete("/details/{detail_id}")
+@basic_router.delete("/details/{detail_id}")
 def delete_detail(detail_id: int, db: Session = Depends(get_db)):
     db_detail = db.query(Detail).filter(Detail.id == detail_id).first()
     if db_detail is None:
@@ -140,7 +142,7 @@ def delete_detail(detail_id: int, db: Session = Depends(get_db)):
 
 
 # CRUD operations for Changes
-@app.post("/changes/")
+@basic_router.post("/changes/")
 def create_change(change: ChangeCreate, db: Session = Depends(get_db)):
     db_change = Change(**change.dict())
     db.add(db_change)
@@ -149,12 +151,12 @@ def create_change(change: ChangeCreate, db: Session = Depends(get_db)):
     return db_change
 
 
-@app.get("/changes/")
+@basic_router.get("/changes/")
 def read_changes(db: Session = Depends(get_db)):
     return db.query(Change).all()
 
 
-@app.get("/changes/{change_id}")
+@basic_router.get("/changes/{change_id}")
 def read_change(change_id: int, db: Session = Depends(get_db)):
     db_change = db.query(Change).filter(Change.issue_id == change_id).first()
     if db_change is None:
@@ -162,7 +164,7 @@ def read_change(change_id: int, db: Session = Depends(get_db)):
     return db_change
 
 
-@app.put("/changes/{change_id}")
+@basic_router.put("/changes/{change_id}")
 def update_change(change_id: int, change: ChangeCreate, db: Session = Depends(get_db)):
     db_change = db.query(Change).filter(Change.issue_id == change_id).first()
     if db_change is None:
@@ -176,7 +178,7 @@ def update_change(change_id: int, change: ChangeCreate, db: Session = Depends(ge
     return db_change
 
 
-@app.delete("/changes/{change_id}")
+@basic_router.delete("/changes/{change_id}")
 def delete_change(change_id: int, db: Session = Depends(get_db)):
     db_change = db.query(Change).filter(Change.issue_id == change_id).first()
     if db_change is None:
