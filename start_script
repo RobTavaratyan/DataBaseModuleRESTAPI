@@ -20,15 +20,41 @@ sleep 10
 
 
 echo "Running init_models.py..."
-$VIRTUAL_ENV/bin/python3 ./alchemy/init_models.py
+$VIRTUAL_ENV/bin/python3 ./application/init_models.py
 sleep 10
 
 echo "Starting FastAPI application..."
-$VIRTUAL_ENV/bin/uvicorn FastAPI.main:fastapi_app --reload &
+$VIRTUAL_ENV/bin/uvicorn main:fastapi_app --reload &
 sleep 10
 
 echo 'Running generator for DB...'
 $VIRTUAL_ENV/bin/python3 ./Tools/generator.py
 sleep 30
+
+curl -X 'GET' \
+  'http://localhost:8000/cars/filter/John/Toyota?created_after=2020-01-01&order_by=created_at&direction=asc' \
+  -H 'accept: application/json'
+sleep 2
+
+curl -X 'GET' \
+  'http://localhost:8000/cars/1?order_by=price&direction=desc' \
+  -H 'accept: application/json'
+sleep 2
+
+curl -X 'PUT' \
+  'http://localhost:8000/cars/update_power/Toyota?created_before=2020-01-01' \
+  -H 'accept: application/json'
+sleep 2
+
+curl -X 'GET' \
+  'http://localhost:8000/cars/group_by_brand/car_count?direction=desc' \
+  -H 'accept: application/json'
+sleep 2
+
+curl -X 'GET' \
+  'http://localhost:8000/cars/sort/power?direction=asc' \
+  -H 'accept: application/json'
+
+
 
 

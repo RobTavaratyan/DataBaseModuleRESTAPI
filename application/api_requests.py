@@ -1,16 +1,16 @@
-from datetime import date
+from datetime import date, datetime
 
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy import func, desc, asc
 from sqlalchemy.orm import Session
 
-from FastAPI.basic_router import get_db
-from alchemy.init_models import Car, Detail, Change
+from .basic_router import get_db
+from .init_models import Car, Detail, Change
 
 api_router = APIRouter()
 
 
-@api_router.get("/cars/filter")
+@api_router.get("/cars/filter/{owner}/{brand}")
 async def filter_cars(
         owner: str,
         brand: str,
@@ -21,8 +21,6 @@ async def filter_cars(
 ):
     """
     SELECT * FROM cars WHERE owner = :owner AND brand = :brand AND created_at > :created_after;
-
-    GET /cars/filter?owner=John&brand=Toyota&created_after=2020-01-01&order_by=created_at&direction=asc
     """
     # Convert created_after to a date object
     try:
@@ -62,7 +60,7 @@ async def filter_cars(
     return {"cars": cars}
 
 
-@api_router.get("/cars/{car_id}/details")
+@api_router.get("/cars/{car_id}")
 async def get_car_details(
         car_id: int,
         order_by: str = "id",
@@ -73,8 +71,6 @@ async def get_car_details(
     SELECT details.* FROM details
     JOIN changes ON details.id = changes.appearance_change
     WHERE changes.car_id = :car_id;
-
-    GET /cars/1/details?order_by=price&direction=desc
     """
     if direction not in ["asc", "desc"]:
         raise HTTPException(
@@ -104,26 +100,26 @@ async def get_car_details(
     return {"details": details}
 
 
-@api_router.put("/cars/update_power")
-async def update_power(brand: str, created_before: str, db: Session = Depends(get_db)):
+@api_router.put("/cars/update_power/{brand}")
+async def update_power(
+        brand: str, created_before: str = '2000-01-01', db: Session = Depends(get_db)
+):
     """
     UPDATE cars SET power = power * 1.2
     WHERE brand = :brand AND created_at < :created_before;
-
-    PUT /cars/update_power?brand=BMW&created_before=2020-01-01
     """
     # Convert created_before to a date object
     try:
-        created_before_date = date.fromisoformat(
-            created_before
-        )  # Assumes the format is 'YYYY-MM-DD'
+        created_before_date = date.fromisoformat(created_before)  # Assumes the format is 'YYYY-MM-DD'
     except ValueError:
         raise HTTPException(
             status_code=400, detail="Invalid date format. Use 'YYYY-MM-DD'."
         )
 
+    # Adjust for datetime comparison
+    # If created_at is a datetime field, ensure we compare only the date portion
     cars_to_update = db.query(Car).filter(
-        Car.brand == brand, Car.created_at < created_before_date
+        Car.brand == brand, Car.created_at < datetime.combine(created_before_date, datetime.min.time())
     )
 
     updated_count = cars_to_update.update(
@@ -133,20 +129,18 @@ async def update_power(brand: str, created_before: str, db: Session = Depends(ge
 
     if updated_count == 0:
         raise HTTPException(
-            status_code=404, detail="No cars found with the given criteria to update."
+            status_code=200, detail="No cars found with the given criteria to update."
         )
 
     return {"message": f"{updated_count} car(s) power updated successfully."}
 
 
-@api_router.get("/cars/group_by_brand")
+@api_router.get("/cars/group_by_brand/{order_by}")
 async def group_by_brand(
-        order_by: str = "brand", direction: str = "asc", db: Session = Depends(get_db)
+        order_by: str, direction: str = "asc", db: Session = Depends(get_db)
 ):
     """
     SELECT brand, COUNT(*) as car_count FROM cars GROUP BY brand;
-
-    GET /cars/group_by_brand?order_by=car_count&direction=desc
     """
     if direction not in ["asc", "desc"]:
         raise HTTPException(
@@ -160,7 +154,7 @@ async def group_by_brand(
     # Sorting logic
     if order_by == "car_count":
         results_query = results_query.order_by(
-            desc("car_count") if direction == "desc" else asc("car_count")
+            desc(func.count(Car.id)) if direction == "desc" else asc(func.count(Car.id))
         )
     else:
         order_column = getattr(Car, order_by, None)
@@ -171,18 +165,17 @@ async def group_by_brand(
         else:
             results_query = results_query.order_by(asc(order_column))
 
-    results = results_query.all()
+    results = [{"brand": brand, "car_count": car_count} for brand, car_count in results_query.all()]
+
     return {"brands": results}
 
 
-@api_router.get("/cars/sort")
+@api_router.get("/cars/sort/{order_by}")
 async def sort_cars(
-        order_by: str = "power", direction: str = "desc", db: Session = Depends(get_db)
+        order_by: str, direction: str = "desc", db: Session = Depends(get_db)
 ):
     """
     SELECT * FROM cars ORDER BY :order_by :direction;
-
-    GET /cars/sort?order_by=power&direction=desc
     """
     if direction not in ["asc", "desc"]:
         raise HTTPException(

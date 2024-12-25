@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, date
 import requests
 import time
 
-# Define BASE_URL for your FastAPI server
-BASE_URL = "http://localhost:8000"  # Change this to your FastAPI server URL
+# Define BASE_URL for your application server
+BASE_URL = "http://localhost:8000"  # Change this to your application server URL
 
 
 # Function to serialize date and datetime objects

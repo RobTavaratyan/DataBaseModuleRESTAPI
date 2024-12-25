@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from alchemy.init_models import Car, Detail, Change, SessionLocal
+from .init_models import Car, Detail, Change, SessionLocal
 
 basic_router = APIRouter()
 
@@ -48,7 +48,7 @@ class ChangeCreate(BaseModel):
 # CRUD operations for Cars
 @basic_router.post("/cars/")
 def create_car(car: CarCreate, db: Session = Depends(get_db)):
-    db_car = Car(**car.dict())
+    db_car = Car(**car.model_dump())
     db.add(db_car)
     db.commit()
     db.refresh(db_car)
@@ -74,7 +74,7 @@ def update_car(car_id: int, car: CarCreate, db: Session = Depends(get_db)):
     if db_car is None:
         raise HTTPException(status_code=404, detail="Car not found")
 
-    for key, value in car.dict().items():
+    for key, value in car.model_dump().items():
         setattr(db_car, key, value)
 
     db.commit()
@@ -96,7 +96,7 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
 # CRUD operations for Details
 @basic_router.post("/details/")
 def create_detail(detail: DetailCreate, db: Session = Depends(get_db)):
-    db_detail = Detail(**detail.dict())
+    db_detail = Detail(**detail.model_dump())
     db.add(db_detail)
     db.commit()
     db.refresh(db_detail)
@@ -122,7 +122,7 @@ def update_detail(detail_id: int, detail: DetailCreate, db: Session = Depends(ge
     if db_detail is None:
         raise HTTPException(status_code=404, detail="Detail not found")
 
-    for key, value in detail.dict().items():
+    for key, value in detail.model_dump().items():
         setattr(db_detail, key, value)
 
     db.commit()
@@ -144,7 +144,7 @@ def delete_detail(detail_id: int, db: Session = Depends(get_db)):
 # CRUD operations for Changes
 @basic_router.post("/changes/")
 def create_change(change: ChangeCreate, db: Session = Depends(get_db)):
-    db_change = Change(**change.dict())
+    db_change = Change(**change.model_dump())
     db.add(db_change)
     db.commit()
     db.refresh(db_change)
@@ -170,7 +170,7 @@ def update_change(change_id: int, change: ChangeCreate, db: Session = Depends(ge
     if db_change is None:
         raise HTTPException(status_code=404, detail="Change not found")
 
-    for key, value in change.dict().items():
+    for key, value in change.model_dump().items():
         setattr(db_change, key, value)
 
     db.commit()
